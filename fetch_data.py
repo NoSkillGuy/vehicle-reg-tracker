@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 
 """
@@ -46,6 +46,7 @@ data = resp.json()
 df_today = pd.DataFrame(data)
 today_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 df_today["fetch_date"] = today_date
+yesterday_date = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
 
 # Ensure data folder exists
 os.makedirs("data", exist_ok=True)
@@ -64,17 +65,17 @@ if os.path.exists(snapshot_path):
     )
 
     # Calculate change
-    df_merged["change"] = df_merged["registeredVehicleCount_today"] - df_merged["registeredVehicleCount_yesterday"]
-    df_changes = df_merged[df_merged["change"] != 0].copy()
-    df_changes["date"] = today_date
+    df_merged["registeredVehicleCount"] = df_merged["registeredVehicleCount_today"] - df_merged["registeredVehicleCount_yesterday"]
+    df_changes = df_merged[df_merged["registeredVehicleCount"] != 0].copy()
+    df_changes["date"] = yesterday_date
 
     if not df_changes.empty:
         # Append or create daily_diff.csv
         if os.path.exists(diff_path):
             df_existing_diff = pd.read_csv(diff_path)
-            df_all_diff = pd.concat([df_existing_diff, df_changes[["date", "yearAsString", "change"]]], ignore_index=True)
+            df_all_diff = pd.concat([df_existing_diff, df_changes[["date", "registeredVehicleCount"]]], ignore_index=True)
         else:
-            df_all_diff = df_changes[["date", "yearAsString", "change"]]
+            df_all_diff = df_changes[["date", "registeredVehicleCount"]]
 
         df_all_diff.to_csv(diff_path, index=False)
         print("📈 Daily OLA Electric changes saved:", diff_path)
