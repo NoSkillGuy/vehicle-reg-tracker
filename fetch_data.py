@@ -285,7 +285,7 @@ def plotly_daily_changes():
     for col in [c for c in df.columns if c != 'date']:
         fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
     fig.update_layout(
-        title='Daily Registration Changes by Manufacturer (Interactive)',
+        title='Daily Registration Changes by Manufacturer',
         xaxis_title='Date', yaxis_title='Change in Registered Vehicles',
         template='plotly_white', legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0)
     )
@@ -310,7 +310,7 @@ def plotly_monthly_changes():
     for col in [c for c in df.columns if c != 'date']:
         fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
     fig.update_layout(
-        title='Monthly Registration Totals by Manufacturer (Interactive)',
+        title='Monthly Registration Totals by Manufacturer',
         xaxis_title='Month', yaxis_title='Registered Vehicles',
         template='plotly_white', legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0)
     )

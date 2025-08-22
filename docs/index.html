@@ -23,17 +23,59 @@
     ul {
       line-height: 1.9;
     }
+
+    .chart-wrap {
+      position: relative;
+      margin: 12px 0 32px;
+    }
+
+    .fs-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .fs-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+    }
   </style>
 </head>
 
 <body>
   <h1>EV Two-Wheeler Registrations</h1>
-  <div class="desc">Interactive charts generated from Parivahan analytics snapshots.</div>
-  <ul>
-    <li><a href="daily_changes.html">Daily Registration Changes (Interactive)</a></li>
-    <li><a href="monthly_changes.html">Monthly Registration Totals (Interactive)</a></li>
-  </ul>
+  <div class="desc">Charts generated from Parivahan analytics.</div>
   <p>Charts are updated when the data pipeline runs.</p>
+
+  <h2>Daily Registration Changes</h2>
+  <div class="chart-wrap">
+    <button class="fs-btn" onclick="fs('dailyFrame')" aria-label="Fullscreen daily chart">⤢</button>
+    <iframe id="dailyFrame" src="daily_changes.html" width="100%" height="520" style="border:0;"
+      title="Daily Registration Changes" allow="fullscreen" allowfullscreen></iframe>
+  </div>
+
+  <h2>Monthly Registration Totals</h2>
+  <div class="chart-wrap">
+    <button class="fs-btn" onclick="fs('monthlyFrame')" aria-label="Fullscreen monthly chart">⤢</button>
+    <iframe id="monthlyFrame" src="monthly_changes.html" width="100%" height="520" style="border:0;"
+      title="Monthly Registration Totals" allow="fullscreen" allowfullscreen></iframe>
+  </div>
+  <script>
+    function fs(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (el.requestFullscreen) { el.requestFullscreen(); return; }
+      if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); return; }
+      if (el.msRequestFullscreen) { el.msRequestFullscreen(); return; }
+      window.open(el.src, '_blank');
+    }
+  </script>
 </body>
 
 </html>
