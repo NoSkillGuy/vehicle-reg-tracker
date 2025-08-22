@@ -43,10 +43,10 @@ MANUFACTURERS = [
         "filename": "ather_energy"
     },
     {
-        "name": "Mahindra Last Mile Mobility Ltd",
-        "code": "MAHINDRA LAST MILE MOBILITY LTD",
-        "filename": "mahindra_last_mile_mobility"
-    }
+        "name": "Hero Motocorp Ltd",
+        "code": "HERO MOTOCORP LTD",
+        "filename": "hero_motocorp"
+    },
 ]
 
 HEADERS = {
@@ -76,6 +76,7 @@ def fetch_manufacturer_data(manufacturer_info):
         "vehicleMakers[]": manufacturer_info["code"],
         "calendarType": "3",
         "timePeriod": "0",
+        "vehicleCategoryGroup[]": "Two Wheeler",
         "evType[]": ["ELECTRIC BOV", "PURE EV"],
         "fitnessCheck": "0",
         "vehicleType": ""
