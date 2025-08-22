@@ -44,7 +44,7 @@ resp.raise_for_status()
 data = resp.json()
 
 df_today = pd.DataFrame(data)
-today_date = datetime.utcnow().strftime("%Y-%m-%d")
+today_date = datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
 df_today["fetch_date"] = today_date
 
 # Ensure data folder exists
