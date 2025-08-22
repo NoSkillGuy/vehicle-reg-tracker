@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timezone, timedelta
 import os
+import matplotlib.pyplot as plt
 
 """
 Two-Wheeler Registration Data Collector
@@ -174,6 +175,40 @@ def process_manufacturer_data(manufacturer_info, df_today, today_date):
     df_today.to_csv(snapshot_path, index=False)
     print(f"✅ {manufacturer_info['name']} two-wheeler snapshot updated: {snapshot_path}")
 
+def plot_daily_changes():
+    """Read data/daily_changes.csv and save a multi-line plot as data/daily_changes.png"""
+    csv_path = "data/daily_changes.csv"
+    output_path = "data/daily_changes.png"
+    if not os.path.exists(csv_path):
+        print("ℹ️ No daily_changes.csv found; skipping plot.")
+        return
+    
+    df = pd.read_csv(csv_path)
+    if df.empty:
+        print("ℹ️ daily_changes.csv is empty; skipping plot.")
+        return
+
+    # Ensure date is parsed and sorted
+    if 'date' in df.columns:
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.sort_values('date')
+    
+    # Melt or plot directly by columns (excluding date)
+    manufacturers = [c for c in df.columns if c != 'date']
+    plt.figure(figsize=(12, 6))
+    for m in manufacturers:
+        plt.plot(df['date'], df[m], marker='o', linewidth=2, label=m)
+    
+    plt.title('Daily Registration Changes by Manufacturer')
+    plt.xlabel('Date')
+    plt.ylabel('Change in Registered Vehicles')
+    plt.grid(True, linestyle='--', alpha=0.3)
+    plt.legend(loc='upper left', ncol=2)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"📊 Saved plot: {output_path}")
+
 def main():
     """Main function to fetch and process data for all manufacturers"""
     # Ensure data folder exists
@@ -192,6 +227,9 @@ def main():
             print(f"❌ Failed to fetch data for {manufacturer['name']}")
     
     print("\n🎉 Data collection completed!")
+    
+    # Generate/update plot
+    plot_daily_changes()
 
 if __name__ == "__main__":
     main()
