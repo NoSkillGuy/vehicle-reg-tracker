@@ -283,7 +283,17 @@ def plotly_daily_changes():
     df = df.sort_values('date')
     fig = go.Figure()
     for col in [c for c in df.columns if c != 'date']:
-        fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
+        pct = df[col].pct_change() * 100
+        fig.add_trace(
+            go.Scatter(
+                x=df['date'],
+                y=df[col],
+                mode='lines+markers',
+                name=col,
+                customdata=pct.round(2),
+                hovertemplate='%{x|%Y-%m-%d}<br>%{fullData.name}: Δ %{y} (%{customdata}%)<extra></extra>'
+            )
+        )
     fig.update_layout(
         title='Daily Registration Changes by Manufacturer',
         xaxis_title='Date', yaxis_title='Change in Registered Vehicles',
@@ -308,7 +318,17 @@ def plotly_monthly_changes():
     df = df.sort_values('date')
     fig = go.Figure()
     for col in [c for c in df.columns if c != 'date']:
-        fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
+        pct = df[col].pct_change() * 100
+        fig.add_trace(
+            go.Scatter(
+                x=df['date'],
+                y=df[col],
+                mode='lines+markers',
+                name=col,
+                customdata=pct.round(2),
+                hovertemplate='%{x|%Y-%m}<br>%{fullData.name}: %{y} (%{customdata}% MoM)<extra></extra>'
+            )
+        )
     fig.update_layout(
         title='Monthly Registration Totals by Manufacturer',
         xaxis_title='Month', yaxis_title='Registered Vehicles',
