@@ -3,6 +3,17 @@ import pandas as pd
 from datetime import datetime
 import os
 
+"""
+OLA Electric Two-Wheeler Registration Data Collector
+
+This script fetches daily vehicle registration data for:
+- Manufacturer: OLA ELECTRIC TECHNOLOGIES PVT LTD
+- Vehicle Type: Two Wheeler
+- EV Types: ELECTRIC BOV, PURE EV
+- Time Period: 2024-2025
+- Data Source: Parivahan Analytics Dashboard
+"""
+
 # API endpoint
 URL = "https://analytics.parivahan.gov.in/analytics/publicdashboard/vahandashboard/durationWiseRegistrationTable"
 
@@ -38,8 +49,8 @@ df_today["fetch_date"] = today_date
 
 # Ensure data folder exists
 os.makedirs("data", exist_ok=True)
-snapshot_path = "data/vehicle_data.csv"
-diff_path = "data/daily_diff.csv"
+snapshot_path = "data/ola_electric_two_wheeler_data.csv"
+diff_path = "data/ola_electric_daily_changes.csv"
 
 # Compare with yesterday (if exists)
 if os.path.exists(snapshot_path):
@@ -66,13 +77,13 @@ if os.path.exists(snapshot_path):
             df_all_diff = df_changes[["date", "yearAsString", "change"]]
 
         df_all_diff.to_csv(diff_path, index=False)
-        print("📈 Daily differences saved:", diff_path)
+        print("📈 Daily OLA Electric changes saved:", diff_path)
     else:
-        print("ℹ️ No changes detected today.")
+        print("ℹ️ No changes detected today for OLA Electric vehicles.")
 
 else:
-    print("📌 No previous snapshot found. Creating baseline...")
+    print("📌 No previous OLA Electric data snapshot found. Creating baseline...")
 
 # Save today's snapshot (overwrite)
 df_today.to_csv(snapshot_path, index=False)
-print("✅ Snapshot updated:", snapshot_path)
+print("✅ OLA Electric two-wheeler snapshot updated:", snapshot_path)

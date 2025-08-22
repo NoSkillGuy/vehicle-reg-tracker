@@ -1,4 +1,4 @@
-name: Vehicle Data Collector
+name: OLA Electric Two-Wheeler Data Collector
 
 on:
   schedule:
@@ -34,6 +34,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Daily data update $(date -u)"
+            git commit -m "Daily OLA Electric two-wheeler data update $(date -u)"
             git push
           fi
