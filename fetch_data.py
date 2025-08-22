@@ -209,6 +209,63 @@ def plot_daily_changes():
     plt.close()
     print(f"📊 Saved plot: {output_path}")
 
+def plot_monthly_changes():
+    """Aggregate monthly registeredVehicleCount across manufacturers and save plot and CSV."""
+    combined_df = None
+    # Collect per-manufacturer monthly data
+    for m in MANUFACTURERS:
+        path = f"data/{m['filename']}_two_wheeler_data.csv"
+        if not os.path.exists(path):
+            print(f"ℹ️ Missing snapshot for {m['name']} at {path}; skipping in monthly plot.")
+            continue
+        df = pd.read_csv(path)
+        if 'yearAsString' not in df.columns or 'registeredVehicleCount' not in df.columns:
+            print(f"⚠️ Unexpected schema in {path}; skipping.")
+            continue
+        df = df[['yearAsString', 'registeredVehicleCount']].copy()
+        df = df.rename(columns={'registeredVehicleCount': m['name']})
+        if combined_df is None:
+            combined_df = df
+        else:
+            combined_df = combined_df.merge(df, on='yearAsString', how='outer')
+    
+    if combined_df is None or combined_df.empty:
+        print("ℹ️ No monthly data available to plot.")
+        return
+    
+    # Parse year-month and sort
+    try:
+        combined_df['date'] = pd.to_datetime(combined_df['yearAsString'], format='%Y-%B')
+    except Exception:
+        # Fallback: attempt generic parse
+        combined_df['date'] = pd.to_datetime(combined_df['yearAsString'])
+    combined_df = combined_df.sort_values('date')
+    
+    # Fill missing with 0 so all lines render
+    value_cols = [c for c in combined_df.columns if c not in ['yearAsString', 'date']]
+    combined_df[value_cols] = combined_df[value_cols].fillna(0)
+    
+    # Save merged CSV
+    combined_csv_path = 'data/monthly_changes.csv'
+    combined_df_out = combined_df[['date'] + value_cols].copy()
+    combined_df_out['date'] = combined_df_out['date'].dt.strftime('%Y-%m')
+    combined_df_out.to_csv(combined_csv_path, index=False)
+    
+    # Plot
+    plt.figure(figsize=(12, 6))
+    for col in value_cols:
+        plt.plot(combined_df['date'], combined_df[col], marker='o', linewidth=2, label=col)
+    plt.title('Monthly Registration Totals by Manufacturer')
+    plt.xlabel('Month')
+    plt.ylabel('Registered Vehicles')
+    plt.grid(True, linestyle='--', alpha=0.3)
+    plt.legend(loc='upper left', ncol=2)
+    plt.tight_layout()
+    output_path = 'data/monthly_changes.png'
+    plt.savefig(output_path)
+    plt.close()
+    print(f"📊 Saved monthly plot: {output_path}\n🗂️ Saved combined CSV: {combined_csv_path}")
+
 def main():
     """Main function to fetch and process data for all manufacturers"""
     # Ensure data folder exists
@@ -230,6 +287,7 @@ def main():
     
     # Generate/update plot
     plot_daily_changes()
+    plot_monthly_changes()
 
 if __name__ == "__main__":
     main()
