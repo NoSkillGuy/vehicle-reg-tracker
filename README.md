@@ -1,6 +1,10 @@
 # Vehicle Registration Tracker (EV Two-Wheelers)
 
-Track daily and monthly registrations of electric two-wheelers in India by manufacturer using data from the Parivahan Analytics public dashboard. The repo fetches data, maintains CSV snapshots, computes daily changes, and generates both static PNG charts and interactive Plotly HTML dashboards (published via GitHub Pages).
+Track daily and monthly registrations of electric two-wheelers in India by manufacturer using data from the Parivahan Analytics public dashboard. The repo fetches data, maintains CSV snapshots, computes daily changes, and generates both static PNG charts and Plotly HTML charts (embedded on the index page and published via GitHub Pages).
+
+## Live Site
+
+- GitHub Pages: https://noskillguy.github.io/vehicle-reg-tracker/
 
 ## Data Source
 
@@ -27,7 +31,7 @@ This will:
 - Fetch latest monthly totals per manufacturer and save per-manufacturer snapshots under `data/`
 - Compute and update a consolidated `data/daily_changes.csv` (one row per date; one column per manufacturer)
 - Render static charts: `data/daily_changes.png`, `data/monthly_changes.png`
-- Generate interactive charts: `docs/daily_changes.html`, `docs/monthly_changes.html`
+- Generate HTML charts: `docs/daily_changes.html`, `docs/monthly_changes.html` (both are embedded on `docs/index.html`)
 
 ## Outputs
 
@@ -43,13 +47,13 @@ This will:
   - Static PNGs: `data/daily_changes.png`, `data/monthly_changes.png`
   - Interactive HTML (Plotly): `docs/daily_changes.html`, `docs/monthly_changes.html`
 
-## Interactive Charts on GitHub Pages
+## GitHub Pages
 
 This repo includes a Pages workflow to publish the `docs/` directory.
 
 1. Push to `master`.
 2. In GitHub: Settings → Pages → Source: select “GitHub Actions”.
-3. After the workflow runs, open your Pages URL and use `docs/index.html` to navigate to the charts.
+3. After the workflow runs, open your Pages URL (for this repo: https://noskillguy.github.io/vehicle-reg-tracker/). The index page embeds both charts one below the other, each with a fullscreen button.
 
 ## Automation (Optional)
 
