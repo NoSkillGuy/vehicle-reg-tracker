@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime, timezone, timedelta
 import os
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.offline as pyo
 
 """
 Two-Wheeler Registration Data Collector
@@ -266,6 +268,55 @@ def plot_monthly_changes():
     plt.close()
     print(f"📊 Saved monthly plot: {output_path}\n🗂️ Saved combined CSV: {combined_csv_path}")
 
+def plotly_daily_changes():
+    os.makedirs('docs', exist_ok=True)
+    csv_path = 'data/daily_changes.csv'
+    output_path = 'docs/daily_changes.html'
+    if not os.path.exists(csv_path):
+        print('ℹ️ No daily_changes.csv found; skipping interactive daily plot.')
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty:
+        print('ℹ️ daily_changes.csv is empty; skipping interactive daily plot.')
+        return
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+    fig = go.Figure()
+    for col in [c for c in df.columns if c != 'date']:
+        fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
+    fig.update_layout(
+        title='Daily Registration Changes by Manufacturer (Interactive)',
+        xaxis_title='Date', yaxis_title='Change in Registered Vehicles',
+        template='plotly_white', legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0)
+    )
+    pyo.plot(fig, filename=output_path, auto_open=False, include_plotlyjs='cdn')
+    print(f'🕸️ Saved interactive daily plot: {output_path}')
+
+
+def plotly_monthly_changes():
+    os.makedirs('docs', exist_ok=True)
+    csv_path = 'data/monthly_changes.csv'
+    output_path = 'docs/monthly_changes.html'
+    if not os.path.exists(csv_path):
+        print('ℹ️ No monthly_changes.csv found; skipping interactive monthly plot.')
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty:
+        print('ℹ️ monthly_changes.csv is empty; skipping interactive monthly plot.')
+        return
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values('date')
+    fig = go.Figure()
+    for col in [c for c in df.columns if c != 'date']:
+        fig.add_trace(go.Scatter(x=df['date'], y=df[col], mode='lines+markers', name=col))
+    fig.update_layout(
+        title='Monthly Registration Totals by Manufacturer (Interactive)',
+        xaxis_title='Month', yaxis_title='Registered Vehicles',
+        template='plotly_white', legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='left', x=0)
+    )
+    pyo.plot(fig, filename=output_path, auto_open=False, include_plotlyjs='cdn')
+    print(f'🕸️ Saved interactive monthly plot: {output_path}')
+
 def main():
     """Main function to fetch and process data for all manufacturers"""
     # Ensure data folder exists
@@ -288,6 +339,8 @@ def main():
     # Generate/update plot
     plot_daily_changes()
     plot_monthly_changes()
+    plotly_daily_changes()
+    plotly_monthly_changes()
 
 if __name__ == "__main__":
     main()
