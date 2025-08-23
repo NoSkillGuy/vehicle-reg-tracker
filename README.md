@@ -1,6 +1,35 @@
-# Vehicle Registration Tracker (EV Two-Wheelers)
+# Vehicle Registration Tracker
 
-Track daily and monthly registrations of electric two-wheelers in India by manufacturer using data from the Parivahan Analytics public dashboard. The repo fetches data, maintains CSV snapshots, computes daily changes, and generates both static PNG charts and Plotly HTML charts (embedded on the index page and published via GitHub Pages).
+This project tracks daily vehicle registration data for major two-wheeler manufacturers in India, focusing on electric vehicles.
+
+## Features
+
+- **Automated Data Collection**: Fetches data from Parivahan Analytics Dashboard
+- **Interactive Visualizations**: Generates Plotly HTML charts for web display
+- **Resilient Fetching**: Multiple daily attempts with smart duplicate prevention
+- **Data Snapshots**: Maintains historical CSV data for analysis
+- **Live Documentation**: Auto-updates HTML charts and documentation
+
+## Data Sources
+
+- **Manufacturers**: Bajaj Auto, TVS Motor, Ola Electric, Ather Energy, Hero Motocorp
+- **Vehicle Type**: Two Wheelers
+- **EV Types**: Electric BOV, Pure EV
+- **Time Period**: 2024-2025
+- **Source**: Parivahan Analytics Dashboard
+
+## Output Files
+
+### Data Files
+- `data/*_two_wheeler_data.csv`: Individual manufacturer snapshots
+- `data/daily_changes.csv`: Daily registration changes
+- `data/monthly_changes.csv`: Monthly registration totals
+- `data/fetch_log.csv`: Fetch attempt logs
+
+### Documentation
+- `docs/daily_changes.html`: Interactive daily changes chart
+- `docs/monthly_changes.html`: Interactive monthly totals chart
+- `docs/index.html`: Main dashboard page
 
 ## Resilient Data Fetching System
 
@@ -29,6 +58,7 @@ The system now implements a resilient fetching mechanism that runs multiple time
    - Failed attempts are logged with detailed error information
 
 4. **Benefits**:
+
    - **Reliability**: Multiple attempts ensure data is captured even if some fail
    - **Efficiency**: No duplicate data fetching on the same day
    - **Transparency**: Complete audit trail of all fetch attempts
@@ -55,13 +85,13 @@ The system maintains a detailed log at `data/fetch_log.csv` with columns:
 - Data doesn't exist for today
 - System fetches data from all manufacturers
 - Data is saved with current timestamp
-- Plots and documentation are generated
+- Interactive HTML charts and documentation are generated
 
 **Scenario 2: Subsequent fetch (5:30 AM)**
 
 - Data already exists for today
 - Fetch is skipped
-- Plots and documentation are regenerated
+- HTML charts and documentation are regenerated
 - Fetch attempt is logged as "Data already fetched today"
 
 **Scenario 3: Partial failure (6:30 AM)**
