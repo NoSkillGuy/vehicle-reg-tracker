@@ -1,0 +1,2 @@
+date,time,attempt_number,total_attempts,success,successful_fetches,total_manufacturers,error_details,fetch_times
+2025-08-23,20:58:01,5,5,True,5,5,Data already fetched today,"04:30, 05:30, 06:30, 10:30, 16:30"

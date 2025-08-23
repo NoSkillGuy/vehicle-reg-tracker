@@ -2,6 +2,75 @@
 
 Track daily and monthly registrations of electric two-wheelers in India by manufacturer using data from the Parivahan Analytics public dashboard. The repo fetches data, maintains CSV snapshots, computes daily changes, and generates both static PNG charts and Plotly HTML charts (embedded on the index page and published via GitHub Pages).
 
+## Resilient Data Fetching System
+
+The system now implements a resilient fetching mechanism that runs multiple times per day to ensure data reliability while preventing duplicate fetches.
+
+### How It Works
+
+1. **Multiple Fetch Attempts**: The system runs 5 times daily at:
+
+   - 04:30 UTC (10:00 AM IST)
+   - 05:30 UTC (11:00 AM IST)
+   - 06:30 UTC (12:00 PM IST)
+   - 10:30 UTC (4:00 PM IST)
+   - 16:30 UTC (10:00 PM IST)
+
+2. **Smart Duplicate Prevention**:
+
+   - Each fetch attempt checks if data has already been retrieved for the current day
+   - If data exists, the fetch is skipped but plots and documentation are still regenerated
+   - Only the first successful fetch of the day actually retrieves new data
+
+3. **Data Attribution**:
+
+   - Each data record includes both `fetch_date` (date) and `fetch_timestamp` (exact time)
+   - A `fetch_log.csv` tracks all attempts, successes, and failures
+   - Failed attempts are logged with detailed error information
+
+4. **Benefits**:
+   - **Reliability**: Multiple attempts ensure data is captured even if some fail
+   - **Efficiency**: No duplicate data fetching on the same day
+   - **Transparency**: Complete audit trail of all fetch attempts
+   - **Resilience**: System continues to function even with intermittent API failures
+
+### Fetch Log
+
+The system maintains a detailed log at `data/fetch_log.csv` with columns:
+
+- `date`: Date of the fetch attempt
+- `time`: Exact time of the attempt
+- `attempt_number`: Which attempt this was (1-5)
+- `total_attempts`: Total attempts scheduled (5)
+- `success`: Whether any data was successfully fetched
+- `successful_fetches`: Number of manufacturers successfully fetched
+- `total_manufacturers`: Total manufacturers attempted
+- `error_details`: Any error messages encountered
+- `fetch_times`: All scheduled fetch times for the day
+
+### Example Scenarios
+
+**Scenario 1: First fetch of the day (4:30 AM)**
+
+- Data doesn't exist for today
+- System fetches data from all manufacturers
+- Data is saved with current timestamp
+- Plots and documentation are generated
+
+**Scenario 2: Subsequent fetch (5:30 AM)**
+
+- Data already exists for today
+- Fetch is skipped
+- Plots and documentation are regenerated
+- Fetch attempt is logged as "Data already fetched today"
+
+**Scenario 3: Partial failure (6:30 AM)**
+
+- Some manufacturers fail to fetch
+- Successful fetches are saved
+- Failed attempts are logged with error details
+- System will retry at next scheduled time
+
 ## Live Site
 
 - GitHub Pages: https://noskillguy.github.io/vehicle-reg-tracker/

@@ -15,6 +15,8 @@ This script fetches daily vehicle registration data for:
 - EV Types: ELECTRIC BOV, PURE EV
 - Time Period: 2024-2025
 - Data Source: Parivahan Analytics Dashboard
+
+Resilient fetching: Runs multiple times per day but only fetches data once per day.
 """
 
 # API endpoint
@@ -92,10 +94,14 @@ def fetch_manufacturer_data(manufacturer_info):
             return None
             
         df_today = pd.DataFrame(data)
-        today_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        df_today["fetch_date"] = today_date
+        now = datetime.now(timezone.utc)
+        today_date = now.strftime("%Y-%m-%d")
+        fetch_timestamp = now.strftime("%Y-%m-%d %H:%M:%S UTC")
         
-        return df_today, today_date
+        df_today["fetch_date"] = today_date
+        df_today["fetch_timestamp"] = fetch_timestamp
+        
+        return df_today, today_date, fetch_timestamp
         
     except Exception as e:
         print(f"❌ Error fetching data for {manufacturer_info['name']}: {e}")
@@ -338,30 +344,141 @@ def plotly_monthly_changes():
     pyo.plot(fig, filename=output_path, auto_open=False, include_plotlyjs='cdn')
     print(f'🕸️ Saved interactive monthly plot: {output_path}')
 
+def check_data_already_fetched_today():
+    """Check if data has already been fetched for the current day"""
+    today_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Check if any manufacturer's data file has today's date
+    for manufacturer in MANUFACTURERS:
+        snapshot_path = f"data/{manufacturer['filename']}_two_wheeler_data.csv"
+        if os.path.exists(snapshot_path):
+            try:
+                df = pd.read_csv(snapshot_path)
+                if 'fetch_date' in df.columns and not df.empty:
+                    # Check if any row has today's date
+                    if today_date in df['fetch_date'].values:
+                        print(f"✅ Data already fetched today ({today_date}) for {manufacturer['name']}")
+                        return True
+            except Exception as e:
+                print(f"⚠️ Error reading {snapshot_path}: {e}")
+                continue
+    
+    print(f"🔄 No data found for today ({today_date}), proceeding with fetch...")
+    return False
+
+def get_fetch_attempt_info():
+    """Get information about the current fetch attempt"""
+    now = datetime.now(timezone.utc)
+    current_time = now.strftime("%H:%M")
+    
+    # Determine which fetch attempt this is based on current time
+    fetch_times = ["04:30", "05:30", "06:30", "10:30", "16:30"]
+    attempt_number = 1
+    
+    for i, fetch_time in enumerate(fetch_times):
+        if current_time >= fetch_time:
+            attempt_number = i + 1
+    
+    return {
+        "current_time": current_time,
+        "attempt_number": attempt_number,
+        "total_attempts": len(fetch_times),
+        "fetch_times": fetch_times
+    }
+
+def log_fetch_attempt(fetch_info, success, successful_fetches, total_manufacturers, error_details=None):
+    """Log fetch attempt details to a CSV file"""
+    log_file = "data/fetch_log.csv"
+    
+    now = datetime.now(timezone.utc)
+    log_entry = {
+        'date': now.strftime('%Y-%m-%d'),
+        'time': now.strftime('%H:%M:%S'),
+        'attempt_number': fetch_info['attempt_number'],
+        'total_attempts': fetch_info['total_attempts'],
+        'success': success,
+        'successful_fetches': successful_fetches,
+        'total_manufacturers': total_manufacturers,
+        'error_details': error_details or '',
+        'fetch_times': ', '.join(fetch_info['fetch_times'])
+    }
+    
+    df_log = pd.DataFrame([log_entry])
+    
+    if os.path.exists(log_file):
+        existing_log = pd.read_csv(log_file)
+        df_log = pd.concat([existing_log, df_log], ignore_index=True)
+    
+    df_log.to_csv(log_file, index=False)
+    print(f"📝 Fetch attempt logged to: {log_file}")
+
 def main():
     """Main function to fetch and process data for all manufacturers"""
     # Ensure data folder exists
     os.makedirs("data", exist_ok=True)
     
-    print("🚗 Starting data collection for two-wheeler manufacturers...")
+    # Get fetch attempt information
+    fetch_info = get_fetch_attempt_info()
+    print(f"🚗 Starting data collection for two-wheeler manufacturers...")
+    print(f"⏰ Current time: {fetch_info['current_time']} UTC")
+    print(f"🔄 Attempt {fetch_info['attempt_number']} of {fetch_info['total_attempts']} today")
+    print(f"📅 Scheduled times: {', '.join(fetch_info['fetch_times'])}")
+    
+    # Check if data has already been fetched today
+    if check_data_already_fetched_today():
+        print(f"✅ Data already fetched today. Skipping fetch attempt {fetch_info['attempt_number']}.")
+        print("📊 Regenerating plots and documentation...")
+        
+        # Log the skipped attempt
+        log_fetch_attempt(fetch_info, True, 5, 5, "Data already fetched today")
+        
+        # Still regenerate plots and docs even if no new data
+        plot_daily_changes()
+        plot_monthly_changes()
+        plotly_daily_changes()
+        plotly_monthly_changes()
+        
+        print("🎉 Plot and documentation regeneration completed!")
+        return
+    
+    print(f"🔄 Proceeding with fetch attempt {fetch_info['attempt_number']}...")
+    
+    # Track successful fetches
+    successful_fetches = 0
+    total_manufacturers = len(MANUFACTURERS)
+    error_details = []
     
     for manufacturer in MANUFACTURERS:
         print(f"\n🔍 Fetching data for {manufacturer['name']}...")
         
         result = fetch_manufacturer_data(manufacturer)
         if result:
-            df_today, today_date = result
+            df_today, today_date, fetch_timestamp = result
             process_manufacturer_data(manufacturer, df_today, today_date)
+            successful_fetches += 1
         else:
-            print(f"❌ Failed to fetch data for {manufacturer['name']}")
+            error_msg = f"Failed to fetch {manufacturer['name']}"
+            error_details.append(error_msg)
+            print(f"❌ {error_msg}")
     
-    print("\n🎉 Data collection completed!")
+    print(f"\n📊 Fetch Summary:")
+    print(f"   ✅ Successful: {successful_fetches}/{total_manufacturers}")
+    print(f"   ❌ Failed: {total_manufacturers - successful_fetches}/{total_manufacturers}")
     
-    # Generate/update plot
-    plot_daily_changes()
-    plot_monthly_changes()
-    plotly_daily_changes()
-    plotly_monthly_changes()
+    # Log the fetch attempt
+    log_fetch_attempt(fetch_info, successful_fetches > 0, successful_fetches, total_manufacturers, '; '.join(error_details) if error_details else None)
+    
+    if successful_fetches > 0:
+        print(f"🎉 Data collection completed for attempt {fetch_info['attempt_number']}!")
+        
+        # Generate/update plots
+        plot_daily_changes()
+        plot_monthly_changes()
+        plotly_daily_changes()
+        plotly_monthly_changes()
+    else:
+        print(f"⚠️ No data was successfully fetched in attempt {fetch_info['attempt_number']}.")
+        print("🔄 Will retry at the next scheduled time.")
 
 if __name__ == "__main__":
     main()
