@@ -73,7 +73,7 @@ def fetch_manufacturer_data(manufacturer_info):
         "stateCode": "",
         "rtoCode": "0",
         "toYear": "2025",
-        "fromYear": "2024",
+        "fromYear": "2020",
         "vehicleMakers[]": manufacturer_info["code"],
         "calendarType": "3",
         "timePeriod": "0",
