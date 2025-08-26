@@ -4,7 +4,7 @@ on:
   push:
     branches: [master]
   workflow_run:
-    workflows: ["OLA Electric Two-Wheeler Data Collector"]
+    workflows: ["OLA Electric Two-Wheeler Data Collector (Multi-Fetch)"]
     types: [completed]
 
 permissions:
