@@ -114,7 +114,50 @@ def process_manufacturer_data(manufacturer_info, df_today, today_date):
     snapshot_path = f"data/{manufacturer_info['filename']}_two_wheeler_data.csv"
     daily_changes_path = "data/daily_changes.csv"
     
-    # Compare with yesterday (if exists)
+    # Check if there's actual data change before updating
+    data_changed = False
+    if os.path.exists(snapshot_path):
+        df_yesterday = pd.read_csv(snapshot_path)
+        
+        # Compare registeredVehicleCount values
+        if 'registeredVehicleCount' in df_today.columns and 'registeredVehicleCount' in df_yesterday.columns:
+            # Merge on yearAsString to compare values
+            df_compare = df_today.merge(
+                df_yesterday[["yearAsString", "registeredVehicleCount"]],
+                on="yearAsString",
+                suffixes=("_new", "_old")
+            )
+            
+            # Check if any values have changed
+            if not df_compare.empty:
+                changes = df_compare[df_compare["registeredVehicleCount_new"] != df_compare["registeredVehicleCount_old"]]
+                if not changes.empty:
+                    data_changed = True
+                    print(f"📊 Data change detected for {manufacturer_info['name']}: {len(changes)} months updated")
+                else:
+                    print(f"ℹ️ No data changes for {manufacturer_info['name']} - values are identical")
+            else:
+                # No matching data, treat as new data
+                data_changed = True
+                print(f"🆕 New data structure for {manufacturer_info['name']}")
+        else:
+            # Missing columns, treat as new data
+            data_changed = True
+            print(f"🆕 New data structure for {manufacturer_info['name']}")
+    else:
+        # No existing file, treat as new data
+        data_changed = True
+        print(f"🆕 First time data for {manufacturer_info['name']}")
+    
+    # Only update snapshot if data actually changed
+    if data_changed:
+        df_today.to_csv(snapshot_path, index=False)
+        print(f"✅ {manufacturer_info['name']} two-wheeler snapshot updated: {snapshot_path}")
+    else:
+        print(f"⏭️ Skipping update for {manufacturer_info['name']} - no changes detected")
+    
+    # Always process daily changes (even if snapshot wasn't updated)
+    # This ensures we track when data was last checked, even if unchanged
     if os.path.exists(snapshot_path):
         df_yesterday = pd.read_csv(snapshot_path)
 
@@ -179,9 +222,9 @@ def process_manufacturer_data(manufacturer_info, df_today, today_date):
     else:
         print(f"📌 No previous {manufacturer_info['name']} data snapshot found. Creating baseline...")
 
-    # Save today's snapshot (overwrite)
-    df_today.to_csv(snapshot_path, index=False)
-    print(f"✅ {manufacturer_info['name']} two-wheeler snapshot updated: {snapshot_path}")
+        # Save today's snapshot (overwrite)
+        df_today.to_csv(snapshot_path, index=False)
+        print(f"✅ {manufacturer_info['name']} two-wheeler snapshot updated: {snapshot_path}")
 
 def plotly_daily_changes():
     os.makedirs('docs', exist_ok=True)
@@ -216,7 +259,6 @@ def plotly_daily_changes():
     )
     pyo.plot(fig, filename=output_path, auto_open=False, include_plotlyjs='cdn')
     print(f'🕸️ Saved interactive daily plot: {output_path}')
-
 
 def plotly_monthly_changes():
     os.makedirs('docs', exist_ok=True)
@@ -423,6 +465,7 @@ def main():
         
         # Generate/update monthly CSV and interactive charts
         generate_monthly_csv()
+        generate_monthly_changes_csv()
         plotly_daily_changes()
         plotly_monthly_changes()
     else:
